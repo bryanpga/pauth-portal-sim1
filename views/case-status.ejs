@@ -1,0 +1,20 @@
+<%- include('partials/header', { title: 'Check Case Status' }) %>
+<div class="content">
+  <h2 class="pagetitle">Check Case Status</h2>
+  <form method="get" action="/case-status" class="filterpanel open" id="caseStatusForm">
+    <label>Reference Number <input name="referenceNumber" value="<%= ref %>" placeholder="UM123456" required></label>
+    <button type="submit">Check Status</button>
+  </form>
+  <% if (searched && !row) { %><div class="alert error" style="margin-top:12px">No case found with reference number <strong><%= ref %></strong>.</div><% } %>
+  <% if (row) { %>
+    <div class="card" style="margin-top:12px;max-width:520px"><h3>Case <%= row.referenceNumber %></h3><dl>
+      <dt>Status</dt><dd><%= row.status %></dd>
+      <dt>Tracking ID</dt><dd><a href="/requests/<%= row.trackingId %>"><%= row.trackingId %></a></dd>
+      <dt>Patient</dt><dd><%= row.patientName %></dd>
+      <dt>Service Dates</dt><dd><%= row.serviceStart %> - <%= row.serviceEnd %></dd>
+      <dt>Request Type</dt><dd><%= row.requestType %></dd>
+      <dt>Last Updated</dt><dd><%= row.updatedDate %> by <%= row.updatedBy %></dd>
+    </dl></div>
+  <% } %>
+</div>
+<%- include('partials/footer') %>

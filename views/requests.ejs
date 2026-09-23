@@ -1,0 +1,107 @@
+<%
+  const qs = (overrides) => {
+    const p = new URLSearchParams();
+    const merged = { ...query, ...overrides };
+    for (const [k, v] of Object.entries(merged)) if (v !== '' && v != null) p.set(k, v);
+    return '/requests?' + p.toString();
+  };
+  const sortLink = (col) => {
+    const dir = result.sort === col && result.dir === 'desc' ? 'asc' : 'desc';
+    return qs({ sort: col, dir, page: 1 });
+  };
+  const arrow = (col) => result.sort === col ? `<span class="sortarrow">${result.dir === 'desc' ? '&#8595;' : '&#8593;'}</span>` : '';
+  const hasFilters = ['status','requestType','patient','trackingId','referenceNumber','npi'].some(k => query[k]);
+%>
+<%- include('partials/header', { title: "My Organization's Requests" }) %>
+<div class="content">
+  <form method="get" action="/requests" id="gridForm">
+    <input type="hidden" name="sort" value="<%= result.sort %>">
+    <input type="hidden" name="dir" value="<%= result.dir %>">
+    <% for (const k of ['status','requestType','patient','trackingId','referenceNumber','npi']) { if (query[k]) { %><input type="hidden" name="<%= k %>" value="<%= query[k] %>"><% } } %>
+    <div class="toolbar">
+      <div class="pager">
+        <% if (result.page > 1) { %>
+          <a href="<%= qs({ page: 1 }) %>" title="First page" id="pageFirst">&#9198;</a>
+          <a href="<%= qs({ page: result.page - 1 }) %>" title="Previous page" id="pagePrev">&#9664;</a>
+        <% } else { %>
+          <span class="btn disabled">&#9198;</span><span class="btn disabled">&#9664;</span>
+        <% } %>
+        <span class="sep"></span>
+        <label for="pageInput">Page</label>
+        <input id="pageInput" name="page" type="text" value="<%= result.page %>" inputmode="numeric">
+        <span>of <%= result.totalPages %></span>
+        <span class="sep"></span>
+        <% if (result.page < result.totalPages) { %>
+          <a href="<%= qs({ page: result.page + 1 }) %>" title="Next page" id="pageNext">&#9654;</a>
+          <a href="<%= qs({ page: result.totalPages }) %>" title="Last page" id="pageLast">&#9197;</a>
+        <% } else { %>
+          <span class="btn disabled">&#9654;</span><span class="btn disabled">&#9197;</span>
+        <% } %>
+      </div>
+      <div class="viewresults">
+        <span>View Results</span>
+        <select name="size" id="pageSize" onchange="document.getElementById('pageInput').value=1;this.form.submit()">
+          <% for (const n of [10, 20, 50, 100]) { %><option value="<%= n %>" <%= result.size === n ? 'selected' : '' %>><%= n %></option><% } %>
+        </select>
+      </div>
+      <div class="summary" id="resultSummary">Displaying <%= result.from %> to <%= result.to %> of <%= result.total %> Requests Found</div>
+      <div class="spacer"></div>
+      <button type="button" class="iconbtn" title="Filter" id="filterToggle" onclick="document.getElementById('filterPanel').classList.toggle('open')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M7 9h10l-4 5v4l-2-1v-3z"/></svg>
+      </button>
+      <button type="button" class="iconbtn" title="Print" id="printBtn" onclick="window.print()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>
+      </button>
+    </div>
+  </form>
+  <form method="get" action="/requests" class="filterpanel <%= hasFilters ? 'open' : '' %>" id="filterPanel">
+    <input type="hidden" name="sort" value="<%= result.sort %>"><input type="hidden" name="dir" value="<%= result.dir %>"><input type="hidden" name="size" value="<%= result.size %>">
+    <label>Tracking ID <input name="trackingId" value="<%= query.trackingId || '' %>"></label>
+    <label>Reference Number <input name="referenceNumber" value="<%= query.referenceNumber || '' %>"></label>
+    <label>Status <select name="status"><option value="">All</option><% for (const s of statuses) { %><option <%= query.status === s ? 'selected' : '' %>><%= s %></option><% } %></select></label>
+    <label>Patient Name <input name="patient" value="<%= query.patient || '' %>" placeholder="Last, First"></label>
+    <label>Request Type <select name="requestType"><option value="">All</option><% for (const t of requestTypes) { %><option <%= query.requestType === t ? 'selected' : '' %>><%= t %></option><% } %></select></label>
+    <label>Provider NPI <input name="npi" value="<%= query.npi || '' %>"></label>
+    <button type="submit">Apply</button>
+    <a class="btn secondary" href="/requests" style="line-height:26px">Clear</a>
+  </form>
+
+  <table class="grid" id="requestsGrid">
+    <thead>
+      <tr>
+        <th><a href="<%= sortLink('trackingId') %>">Request<br>Tracking ID <%- arrow('trackingId') %><span class="caret">&#9660;</span></a></th>
+        <th><a href="<%= sortLink('referenceNumber') %>">Reference<br>Number <%- arrow('referenceNumber') %><span class="caret">&#9660;</span></a></th>
+        <th><a href="<%= sortLink('status') %>">Status <%- arrow('status') %><span class="caret">&#9660;</span></a></th>
+        <th><a href="<%= sortLink('patientName') %>">Patient Name <%- arrow('patientName') %><span class="caret">&#9660;</span></a></th>
+        <th><a href="<%= sortLink('serviceStart') %>">Service Date<br>Range <%- arrow('serviceStart') %><span class="caret">&#9660;</span></a></th>
+        <th><a href="<%= sortLink('requestType') %>">Request Type <%- arrow('requestType') %><span class="caret">&#9660;</span></a></th>
+        <th><a href="<%= sortLink('providerNpi') %>">Requesting<br>Provider NPI <%- arrow('providerNpi') %><span class="caret">&#9660;</span></a></th>
+        <th><a href="<%= sortLink('submitDate') %>">Submit Date <%- arrow('submitDate') %><span class="caret">&#9660;</span></a></th>
+        <th class="created"><a href="<%= sortLink('createdBy') %>">Created By <%- arrow('createdBy') %><span class="caret">&#9660;</span></a></th>
+        <th><a href="<%= sortLink('updatedDate') %>">Updated Date <%- arrow('updatedDate') %><span class="caret">&#9660;</span></a></th>
+        <th><a href="<%= sortLink('updatedBy') %>">Updated By <%- arrow('updatedBy') %><span class="caret">&#9660;</span></a></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (result.rows.length === 0) { %>
+        <tr><td colspan="11" class="empty">No requests match the current filters.</td></tr>
+      <% } %>
+      <% for (const r of result.rows) { %>
+        <tr data-tracking-id="<%= r.trackingId %>">
+          <td><a href="/requests/<%= r.trackingId %>"><%= r.trackingId %></a></td>
+          <td><%= r.referenceNumber %></td>
+          <td><span class="status-pill status-<%= r.status.replace(/\s+/g, '-') %>"><%= r.status %></span></td>
+          <td class="name"><%= r.patientName %></td>
+          <td class="nowrap"><%= r.serviceStart %> -<br><%= r.serviceEnd %></td>
+          <td><%= r.requestType %></td>
+          <td><%= r.providerNpi %></td>
+          <td class="nowrap"><% if (r.submitDate) { %><%= r.submitDate.slice(0, 10) %><br><%= r.submitDate.slice(11) %><% } %></td>
+          <td class="by"><%= r.createdBy %></td>
+          <td class="nowrap"><%= r.updatedDate.slice(0, 10) %><br><%= r.updatedDate.slice(11) %></td>
+          <td class="by"><%= r.updatedBy %></td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('partials/footer') %>

@@ -1,0 +1,26 @@
+<%- include('partials/header', { title: 'Search Submitted Requests' }) %>
+<div class="content">
+  <h2 class="pagetitle">Search Submitted Requests</h2>
+  <form method="get" action="/search" class="filterpanel open" id="searchForm">
+    <label>Tracking ID <input name="trackingId" value="<%= query.trackingId || '' %>"></label>
+    <label>Reference Number <input name="referenceNumber" value="<%= query.referenceNumber || '' %>"></label>
+    <label>Patient Name <input name="patient" value="<%= query.patient || '' %>" placeholder="Last, First"></label>
+    <label>Status <select name="status"><option value="">All</option><% for (const s of statuses) { %><option <%= query.status === s ? 'selected' : '' %>><%= s %></option><% } %></select></label>
+    <label>Request Type <select name="requestType"><option value="">All</option><% for (const t of requestTypes) { %><option <%= query.requestType === t ? 'selected' : '' %>><%= t %></option><% } %></select></label>
+    <label>Provider NPI <input name="npi" value="<%= query.npi || '' %>"></label>
+    <button type="submit">Search</button>
+  </form>
+  <% if (result) { %>
+    <p style="margin:10px 0"><%= result.total %> request(s) found<% if (result.total > result.size) { %> (showing first <%= result.size %>)<% } %>.</p>
+    <table class="grid">
+      <thead><tr><th>Tracking ID</th><th>Reference Number</th><th>Status</th><th>Patient Name</th><th>Service Date Range</th><th>Request Type</th><th>Provider NPI</th><th>Submit Date</th></tr></thead>
+      <tbody>
+        <% if (!result.rows.length) { %><tr><td colspan="8" class="empty">No matching requests.</td></tr><% } %>
+        <% for (const r of result.rows) { %>
+          <tr><td><a href="/requests/<%= r.trackingId %>"><%= r.trackingId %></a></td><td><%= r.referenceNumber %></td><td><%= r.status %></td><td class="name"><%= r.patientName %></td><td class="nowrap"><%= r.serviceStart %> - <%= r.serviceEnd %></td><td><%= r.requestType %></td><td><%= r.providerNpi %></td><td class="nowrap"><%= r.submitDate %></td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+<%- include('partials/footer') %>

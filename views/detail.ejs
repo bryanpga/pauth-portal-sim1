@@ -1,0 +1,31 @@
+<%- include('partials/header', { title: 'Request ' + row.trackingId }) %>
+<div class="content">
+  <div class="breadcrumb"><a href="/requests">My Organization's Requests</a> &rsaquo; Request Tracking ID <%= row.trackingId %></div>
+  <h2 class="pagetitle">Request <%= row.trackingId %> <% if (row.referenceNumber) { %>&middot; <%= row.referenceNumber %><% } %> &mdash; <span class="status-<%= row.status.replace(/\s+/g, '-') %>"><%= row.status %></span></h2>
+  <div class="detailgrid">
+    <div class="card"><h3>Request</h3><dl>
+      <dt>Tracking ID</dt><dd><%= row.trackingId %></dd>
+      <dt>Reference Number</dt><dd><%= row.referenceNumber || '—' %></dd>
+      <dt>Status</dt><dd><%= row.status %></dd>
+      <dt>Request Type</dt><dd><%= row.requestType %></dd>
+      <dt>Service Date Range</dt><dd><%= row.serviceStart %> - <%= row.serviceEnd %></dd>
+      <dt>Submit Date</dt><dd><%= row.submitDate || '—' %></dd>
+      <dt>Created By</dt><dd><%= row.createdBy %></dd>
+      <dt>Updated</dt><dd><%= row.updatedDate %> by <%= row.updatedBy %></dd>
+    </dl></div>
+    <div class="card"><h3>Patient</h3><dl>
+      <dt>Name</dt><dd><%= row.patientName %></dd>
+      <dt>Member ID</dt><dd><%= row.memberId %></dd>
+      <dt>Date of Birth</dt><dd><%= row.dob %></dd>
+    </dl></div>
+    <div class="card"><h3>Clinical / Provider</h3><dl>
+      <dt>Requesting Provider NPI</dt><dd><%= row.providerNpi || '—' %></dd>
+      <dt>Servicing Facility</dt><dd><%= row.servicingProvider %></dd>
+      <dt>Service Code</dt><dd><%= row.serviceCode %></dd>
+      <dt>Units</dt><dd><%= row.units %></dd>
+      <dt>Primary Diagnosis</dt><dd><%= row.diagnosis %></dd>
+    </dl></div>
+  </div>
+  <p style="margin-top:16px"><a href="/requests" class="btn secondary">Back to list</a></p>
+</div>
+<%- include('partials/footer') %>

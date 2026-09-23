@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign In - <%= portalName %> Provider Portal</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="auth">
+<div class="authwrap">
+  <div class="authcard">
+    <div class="head"><span class="logo"></span><div><h1><%= portalName %></h1><small>Provider Portal &middot; Utilization Management</small></div></div>
+    <div class="body">
+      <h2>Sign In</h2>
+      <% if (error) { %><div class="alert error" role="alert"><%= error %></div><% } %>
+      <% if (notice) { %><div class="alert info"><%= notice %></div><% } %>
+      <form method="post" action="/login" autocomplete="off" id="loginForm">
+        <input type="hidden" name="next" value="<%= next %>">
+        <div class="field">
+          <label for="username">User ID</label>
+          <input id="username" name="username" type="text" value="<%= username %>" required autofocus>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required>
+        </div>
+        <button class="primary" type="submit" id="signInBtn">Sign In</button>
+        <div class="links"><a href="#">Forgot User ID or Password?</a><a href="#">Register</a></div>
+      </form>
+      <div class="simbox">
+        <strong>Simulation credentials</strong>
+        User IDs <code>jjackson</code>, <code>jnurse</code>, <code>ssmith</code> &mdash; password <code>Password123!</code><br>
+        <span class="hint">A verification code will be "sent" on the next screen. A new random dataset is generated for every login.</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

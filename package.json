@@ -1,0 +1,16 @@
+{
+  "name": "pauth-portal-sim1",
+  "version": "1.0.0",
+  "description": "Simulated prior authorization payer portal with fake login + 2FA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1"
+  }
+}

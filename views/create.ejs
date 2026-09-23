@@ -1,0 +1,29 @@
+<%- include('partials/header', { title: 'Create New Request' }) %>
+<div class="content">
+  <h2 class="pagetitle">Create New Request</h2>
+  <% if (created) { %>
+    <div class="alert ok">Request <strong><%= created.trackingId %></strong> <%= created.status === 'Submitted' ? 'submitted' : 'saved as Not Submitted' %><% if (created.referenceNumber) { %> with reference number <strong><%= created.referenceNumber %></strong><% } %>. <a href="/requests/<%= created.trackingId %>">View request</a> &middot; <a href="/requests">Back to list</a></div>
+  <% } %>
+  <form method="post" action="/create" class="card" id="createForm">
+    <h3>Patient &amp; Service Information</h3>
+    <div class="formgrid">
+      <div class="field"><label>Member ID</label><input name="memberId" required></div>
+      <div class="field"><label>Patient Last Name</label><input name="lastName" required></div>
+      <div class="field"><label>Patient First Name</label><input name="firstName" required></div>
+      <div class="field"><label>Date of Birth</label><input name="dob" type="date" required></div>
+      <div class="field"><label>Request Type</label><select name="requestType"><% for (const t of requestTypes) { %><option><%= t %></option><% } %></select></div>
+      <div class="field"><label>Requesting Provider NPI</label><input name="providerNpi" pattern="[0-9]{10}" required></div>
+      <div class="field"><label>Servicing Facility</label><input name="servicingProvider" value="<%= user.org %>"></div>
+      <div class="field"><label>Service Start Date</label><input name="serviceStart" type="date" required></div>
+      <div class="field"><label>Service End Date</label><input name="serviceEnd" type="date"></div>
+      <div class="field"><label>Service Code (CPT/HCPCS)</label><input name="serviceCode" required></div>
+      <div class="field"><label>Units</label><input name="units" type="number" min="1" value="1"></div>
+      <div class="field"><label>Primary Diagnosis (ICD-10)</label><input name="diagnosis" required></div>
+    </div>
+    <div class="actions">
+      <button class="btn" type="submit" name="action" value="submit" id="submitRequestBtn">Submit Request</button>
+      <button class="btn secondary" type="submit" name="action" value="save" id="saveDraftBtn">Save Without Submitting</button>
+    </div>
+  </form>
+</div>
+<%- include('partials/footer') %>

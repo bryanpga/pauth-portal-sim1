@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verify Identity - <%= portalName %> Provider Portal</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="auth">
+<div class="authwrap">
+  <div class="authcard">
+    <div class="head"><span class="logo"></span><div><h1><%= portalName %></h1><small>Provider Portal &middot; Utilization Management</small></div></div>
+    <div class="body">
+      <h2>Two-Step Verification</h2>
+      <% if (error) { %><div class="alert error" role="alert"><%= error %></div><% } %>
+      <% if (resent) { %><div class="alert ok">A new verification code has been sent.</div><% } %>
+      <div class="alert info">We sent a 6-digit verification code by text message to <strong><%= user.phone %></strong>. Enter it below to continue. The code expires in 10 minutes.</div>
+      <form method="post" action="/mfa" autocomplete="off" id="mfaForm">
+        <div class="field">
+          <label for="code">Verification Code</label>
+          <input id="code" name="code" class="code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus placeholder="------">
+        </div>
+        <button class="primary" type="submit" id="verifyBtn">Verify</button>
+      </form>
+      <form method="post" action="/mfa/resend" style="margin-top:10px">
+        <div class="links"><button type="submit" class="btn secondary" id="resendBtn">Resend code</button><a href="/logout">Cancel and sign out</a></div>
+      </form>
+      <div class="simbox" id="simSms">
+        <strong>Simulated SMS to <%= user.phone %></strong>
+        Your <%= portalName %> verification code is:
+        <div class="code" id="simCode"><%= simCode %></div>
+        <span class="hint">In a real portal this would arrive on the user's phone. It is also printed to the server console.</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
