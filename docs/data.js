@@ -1,6 +1,6 @@
-// Random dataset generator for the simulated payer portal.
-// A fresh dataset is generated for every login (see server.js), so names, reference
-// numbers, dates, NPIs and statuses differ each session.
+// Seeded dataset generator for the simulated payer portal.
+// The same seed and anchor date always produce the same names, reference numbers,
+// dates, NPIs and statuses (see DATA_SEED in server.js).
 
 const FIRST_NAMES = ['James', 'Mary', 'Robert', 'Patricia', 'John', 'Jennifer', 'Michael', 'Linda', 'David', 'Elizabeth',
   'William', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen',
@@ -54,9 +54,10 @@ function fmtDateTime(d) {
 /**
  * Generate a randomized dataset.
  * @param {number} [seed] optional seed for reproducible runs (defaults to random)
+ * @param {Date} [now] date the ~120-day window ends at (defaults to the current time)
  * @returns {{ rows: object[], seed: number }}
  */
-function generateRequests(seed) {
+function generateRequests(seed, now = new Date()) {
   if (seed == null) seed = Math.floor(Math.random() * 0xffffffff);
   const rand = mulberry32(seed);
   const pick = (arr) => arr[Math.floor(rand() * arr.length)];
@@ -68,7 +69,6 @@ function generateRequests(seed) {
   };
 
   const total = 350 + Math.floor(rand() * 200);              // 350-549 requests
-  const now = new Date();
   const windowMs = 120 * 24 * 3600 * 1000;                    // last ~120 days
   const trackingBase = 250000 + Math.floor(rand() * 40000);
   const refBase = 300000 + Math.floor(rand() * 9000);

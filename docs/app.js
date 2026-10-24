@@ -1,11 +1,16 @@
 /* Static single-page version of the simulated prior auth portal (GitHub Pages).
-   Fake login -> fake 2FA -> requests grid. All state lives in sessionStorage; a new
-   random dataset is generated on every login. Nothing is sent to any server. */
+   Fake login -> (optional fake 2FA) -> requests grid. All state lives in sessionStorage; the
+   dataset comes from a fixed seed, so it is the same on every login. Nothing is sent to any server. */
 (function () {
   'use strict';
   const { generateRequests, STATUSES, REQUEST_TYPES, fmtDateTime } = window.SimData;
   const PORTAL_NAME = 'Meridian Health Plan';
+  const MFA_ENABLED = false; // set to true to bring back the 2FA step
   const FIXED_MFA_CODE = null; // set to e.g. '123456' for deterministic tests
+  // Fixed seed + anchor date so every login sees the same dataset. Set DATA_SEED = null for a fresh random one.
+  const DATA_SEED = 20261023;
+  const DATA_NOW = '2026-10-23T09:00:00';
+  const dataNow = () => (DATA_SEED == null ? undefined : new Date(DATA_NOW));
   const USERS = {
     jjackson: { password: 'Password123!', displayName: 'Jackson, Jill', org: 'Springfield Medical Group', phone: '(***) ***-4821' },
     jnurse:   { password: 'Password123!', displayName: 'Nurse, Jane',   org: 'Springfield Medical Group', phone: '(***) ***-7734' },
@@ -23,7 +28,7 @@
     const s = S.get();
     if (!s) return [];
     if (!DATA || DATA.seed !== s.dataSeed) {
-      const gen = generateRequests(s.dataSeed);
+      const gen = generateRequests(s.dataSeed, dataNow());
       let created = [];
       try { created = JSON.parse(sessionStorage.getItem('sim.created') || '[]'); } catch {}
       DATA = { seed: s.dataSeed, rows: [...created, ...gen.rows] };
@@ -135,7 +140,7 @@
       </form>
       <div class="simbox"><strong>Simulation credentials</strong>
         User IDs <code>jjackson</code>, <code>jnurse</code>, <code>ssmith</code> &mdash; password <code>Password123!</code><br>
-        <span class="hint">A verification code will be "sent" on the next screen. A new random dataset is generated for every login.</span></div>`), 'auth');
+        <span class="hint">${DATA_SEED == null ? 'A new random dataset is generated for every login.' : 'The same simulated dataset is loaded on every login.'}</span></div>`), 'auth');
     document.getElementById('loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const username = document.getElementById('username').value.trim().toLowerCase();
@@ -144,13 +149,19 @@
       if (!u || u.password !== password) {
         return pageLogin({ ...q, username }, 'The User ID or Password you entered is incorrect. Please try again.');
       }
-      const gen = generateRequests();
+      const gen = generateRequests(DATA_SEED, dataNow());
       DATA = null;
       try { sessionStorage.removeItem('sim.created'); } catch {}
-      const s = { username, displayName: u.displayName, org: u.org, phone: u.phone, mfaVerified: false, dataSeed: gen.seed, next: q.next || '' };
+      const s = { username, displayName: u.displayName, org: u.org, phone: u.phone, mfaVerified: !MFA_ENABLED, dataSeed: gen.seed, next: q.next || '' };
       console.log(`[SIM DATA] Generated ${gen.rows.length} requests for ${username} (seed ${gen.seed})`);
-      issueMfaCode(s);
-      go('#/mfa');
+      if (MFA_ENABLED) {
+        issueMfaCode(s);
+        return go('#/mfa');
+      }
+      const next = s.next && s.next.startsWith('#/') ? s.next : '#/requests';
+      delete s.next;
+      S.set(s);
+      go(next);
     });
   }
 
@@ -396,7 +407,7 @@
     const s = S.get();
     if (path === 'logout') { S.clear(); DATA = null; return go('#/login?loggedout=1'); }
     if (path === 'login') { if (s && s.mfaVerified) return go('#/requests'); return pageLogin(query); }
-    if (path === 'mfa') return pageMfa(query);
+    if (path === 'mfa' && MFA_ENABLED) return pageMfa(query);
     // everything else requires a verified session
     if (!s) { return go(buildHash('login', { next: '#/' + path })); }
     if (!s.mfaVerified) return go('#/mfa');

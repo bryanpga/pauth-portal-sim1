@@ -1,5 +1,5 @@
 // Simulated prior authorization payer portal.
-// Fake username/password login -> fake 2FA (code printed to console + shown on page) -> dashboard.
+// Fake username/password login -> (optional fake 2FA) -> dashboard.
 // Nothing here talks to a real payer. All data is synthetic.
 
 const path = require('path');
@@ -10,7 +10,11 @@ const { generateRequests, STATUSES, REQUEST_TYPES, fmtDateTime } = require('./da
 
 const PORT = process.env.PORT || 3000;
 const PORTAL_NAME = process.env.PORTAL_NAME || 'Meridian Health Plan';
+const MFA_ENABLED = process.env.MFA_ENABLED === '1'; // 2FA step is off unless MFA_ENABLED=1
 const FIXED_MFA_CODE = process.env.MFA_CODE || null; // set to e.g. 123456 for deterministic automation tests
+// Fixed seed + anchor date so every run generates the same dataset. DATA_SEED=random for a fresh one per login.
+const DATA_SEED = process.env.DATA_SEED === 'random' ? null : Number(process.env.DATA_SEED || 20261023);
+const DATA_NOW = DATA_SEED == null ? null : new Date(process.env.DATA_NOW || '2026-10-23T09:00:00');
 
 // Fake user directory. Any of these work; password is the same for all in the sim.
 const USERS = {
@@ -19,12 +23,12 @@ const USERS = {
   ssmith:   { password: 'Password123!', displayName: 'Smith, Sally',  org: 'Springfield Medical Group', npi: '1871558510', phone: '(***) ***-0192' },
 };
 
-// Per-session datasets: a fresh random set of requests is generated at every login.
+// Per-session datasets, generated at login (identical every time unless DATA_SEED=random).
 const datasets = new Map();
 function getData(req) {
   let rows = datasets.get(req.sessionID);
   if (!rows) { // e.g. server restarted while a session cookie was still valid
-    const gen = generateRequests(req.session.dataSeed);
+    const gen = generateRequests(req.session.dataSeed, DATA_NOW || undefined);
     rows = gen.rows;
     datasets.set(req.sessionID, rows);
   }
@@ -45,6 +49,7 @@ app.use(session({
 }));
 
 app.locals.portalName = PORTAL_NAME;
+app.locals.fixedData = DATA_SEED != null;
 
 // ---------- auth helpers ----------
 function requireAuth(req, res, next) {
@@ -88,14 +93,19 @@ app.post('/login', (req, res) => {
   req.session.regenerate((err) => {
     if (err) return res.status(500).send('Session error');
     req.session.user = { username, ...user, password: undefined };
-    req.session.mfaVerified = false;
+    req.session.mfaVerified = !MFA_ENABLED;
     req.session.next = req.body.next || '';
-    const gen = generateRequests();
+    const gen = generateRequests(DATA_SEED, DATA_NOW || undefined);
     datasets.set(req.sessionID, gen.rows);
     req.session.dataSeed = gen.seed;
     console.log(`[SIM DATA] Generated ${gen.rows.length} requests for ${username} (seed ${gen.seed})`);
-    issueMfaCode(req);
-    res.redirect('/mfa');
+    if (MFA_ENABLED) {
+      issueMfaCode(req);
+      return res.redirect('/mfa');
+    }
+    const next = req.session.next && req.session.next.startsWith('/') ? req.session.next : '/requests';
+    delete req.session.next;
+    res.redirect(next);
   });
 });
 
@@ -273,6 +283,6 @@ app.listen(PORT, () => {
   console.log(`\n${PORTAL_NAME} — simulated prior auth portal`);
   console.log(`  http://localhost:${PORT}/login`);
   console.log(`  Users: ${Object.keys(USERS).join(', ')}   Password: Password123!`);
-  console.log('  Data:  a fresh random dataset (350-549 requests) is generated on every login');
-  console.log(`  2FA:   ${FIXED_MFA_CODE ? 'fixed code ' + FIXED_MFA_CODE : 'random 6-digit code, printed here and shown on the MFA page'}\n`);
+  console.log(`  Data:  ${DATA_SEED == null ? 'a fresh random dataset is generated on every login' : `fixed seed ${DATA_SEED}, dates anchored to ${DATA_NOW.toISOString()}`}`);
+  console.log(`  2FA:   ${!MFA_ENABLED ? 'off (MFA_ENABLED=1 to turn on)' : FIXED_MFA_CODE ? 'fixed code ' + FIXED_MFA_CODE : 'random 6-digit code, printed here and shown on the MFA page'}\n`);
 });

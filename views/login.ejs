@@ -30,7 +30,7 @@
       <div class="simbox">
         <strong>Simulation credentials</strong>
         User IDs <code>jjackson</code>, <code>jnurse</code>, <code>ssmith</code> &mdash; password <code>Password123!</code><br>
-        <span class="hint">A verification code will be "sent" on the next screen. A new random dataset is generated for every login.</span>
+        <span class="hint"><%= fixedData ? 'The same simulated dataset is loaded on every login.' : 'A new random dataset is generated for every login.' %></span>
       </div>
     </div>
   </div>
