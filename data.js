@@ -68,7 +68,7 @@ function generateRequests(seed, now = new Date()) {
     return STATUSES[0];
   };
 
-  const total = 350 + Math.floor(rand() * 200);              // 350-549 requests
+  const total = 87 + Math.floor(rand() * 37);                 // 87-123 requests
   const windowMs = 120 * 24 * 3600 * 1000;                    // last ~120 days
   const trackingBase = 250000 + Math.floor(rand() * 40000);
   const refBase = 300000 + Math.floor(rand() * 9000);

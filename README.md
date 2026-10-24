@@ -52,7 +52,7 @@ Add `MFA_CODE=123456` for a fixed code (static version: `FIXED_MFA_CODE`).
 
 ## Data
 
-The dataset is generated from a **fixed seed**, so every login and every run sees the same 350–549 requests:
+The dataset is generated from a **fixed seed**, so every login and every run sees the same 87–123 requests:
 patient names, `UM######` reference numbers, tracking IDs, NPIs, dates in the ~120 days before the anchor
 date, and statuses drawn from Approved, Denied, Partial Decision, Needs More Information, Not Submitted,
 Review In Progress. Dates are anchored to a fixed date (`DATA_NOW`) rather than today, so they don't shift either.
